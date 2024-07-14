@@ -57,12 +57,12 @@ siftDown(int a[], int root, int bottom)
   {
     if (root*2 == bottom)
       maxChild = root * 2;
-    else if (a[root * 2] > a[root * 2 + 1]) //left child greater than right child
+    else if (a[root * 2] > a[root * 2 + 1]) 
       maxChild = root * 2;
     else
       maxChild = root * 2 + 1;
 
-    if (a[root] < a[maxChild]) //exchange root with maxchild
+    if (a[root] < a[maxChild]) 
     {
       temp = a[root];
       a[root] = a[maxChild];
