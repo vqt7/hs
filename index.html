@@ -1,75 +1,120 @@
 #include <stdio.h>
-#include<sys/time.h>
-#include<time.h>
-#include<sys/resource.h>
+#include <stdlib.h>
+#include <time.h>
 
-void main()
-{
-int a[100], n, i;
-struct timeval tv1,tv2;
-struct rusage r_usage;
+// Define the structure without typedef
+struct StudentStruct {
+    int id;
+    char name[50];
+};
 
-printf("Enter the number of elements \n");
-scanf("%d",&n);
+// Use typedef to create an alias for the struct
+typedef struct StudentStruct Student;
 
-printf("Enter the elements \n");
-for(i=0;i<n;i++)
- scanf("%d",&a[i]);
+// Function to heapify a subtree rooted at node i which is an index in arr[]. n is the size of the heap
+void heapify(Student arr[], int n, int i) {
+    int largest = i; // Initialize largest as root
+    int left = 2 * i + 1; // left child
+    int right = 2 * i + 2; // right child
 
-gettimeofday(&tv1,NULL);
-heapSort(a,n);
-gettimeofday(&tv2,NULL);
+    // If left child is larger than root
+    if (left < n && arr[left].id > arr[largest].id)
+        largest = left;
 
-printf("Sorted elements are \n");
-for(i=0;i<n;i++)
- printf("%d ",a[i]);
+    // If right child is larger than largest so far
+    if (right < n && arr[right].id > arr[largest].id)
+        largest = right;
 
- printf("Time taken by Heap sort=%f microseconds \n",(double)(tv2.tv_usec-tv1.tv_usec));
+    // If largest is not root
+    if (largest != i) {
+        // swap arr[i] and arr[largest]
+        Student temp = arr[i];
+        arr[i] = arr[largest];
+        arr[largest] = temp;
 
-getrusage(RUSAGE_SELF,&r_usage);
-printf("Memory usage:%ld kilobytes \n",r_usage.ru_maxrss);
-}
-
-
-heapSort(int a[], int n)
-{
-  int i, temp;
-
-  for (i = n-1; i >= 0; i--)
-    siftDown(a, i, n - 1);
-
-  for (i=n-1;i>=1;i--)
-  {
-    temp = a[0];
-    a[0] = a[i];
-    a[i] = temp;
-    siftDown(a, 0, i-1);
-  }
-}
-
-
-siftDown(int a[], int root, int bottom)
-{
-  int done, maxChild, temp;
-
-  done = 0;
-  while ((root*2 <= bottom) && (!done))
-  {
-    if (root*2 == bottom)
-      maxChild = root * 2;
-    else if (a[root * 2] > a[root * 2 + 1]) 
-      maxChild = root * 2;
-    else
-      maxChild = root * 2 + 1;
-
-    if (a[root] < a[maxChild]) 
-    {
-      temp = a[root];
-      a[root] = a[maxChild];
-      a[maxChild] = temp;
-      root = maxChild;
+        // Recursively heapify the affected sub-tree
+        heapify(arr, n, largest);
     }
-    else
-      done = 1;  
 }
- }
+
+// main function to do heap sort
+void heapSort(Student arr[], int n, double *time_taken, size_t *space_complexity) {
+    // Start the timer
+    clock_t start_time = clock();
+
+    // Build heap (rearrange array)
+    for (int i = n / 2 - 1; i >= 0; i--)
+        heapify(arr, n, i);
+
+    // One by one extract an element from heap
+    for (int i = n - 1; i > 0; i--) {
+        // Move current root to end
+        Student temp = arr[0];
+        arr[0] = arr[i];
+        arr[i] = temp;
+
+        // call max heapify on the reduced heap
+        heapify(arr, i, 0);
+    }
+
+    // End the timer
+    clock_t end_time = clock();
+
+    // Calculate the time taken in seconds
+    *time_taken = ((double)(end_time - start_time)) / CLOCKS_PER_SEC;
+
+    // Calculate the space complexity
+    *space_complexity = n * sizeof(Student);
+}
+
+// Utility function to print an array of students
+void printStudents(Student arr[], int n) {
+    for (int i = 0; i < n; ++i)
+        printf("ID: %d, Name: %s\n", arr[i].id, arr[i].name);
+}
+
+// Function to input details of students from the user
+void inputStudents(Student arr[], int n) {
+    printf("Enter details of %d students:\n", n);
+    for (int i = 0; i < n; ++i) {
+        printf("Student %d:\n", i + 1);
+        printf("Enter ID: ");
+        scanf("%d", &arr[i].id);
+        printf("Enter name: ");
+        scanf("%s", arr[i].name);
+    }
+}
+
+int main() {
+    int size;
+
+    printf("Enter the number of students: ");
+    scanf("%d", &size);
+
+    // Dynamically allocate memory for students array
+    Student *students = (Student *)malloc(size * sizeof(Student));
+    if (students == NULL) {
+        printf("Memory allocation failed\n");
+        return 1;
+    }
+
+    inputStudents(students, size);
+
+    // Variables to store time and space complexity
+    double time_taken;
+    size_t space_complexity;
+
+    // Perform heap sort and calculate time and space complexity
+    heapSort(students, size, &time_taken, &space_complexity);
+
+    printf("\nList of students after sorting based on IDs:\n");
+    printStudents(students, size);
+
+    printf("\nTime taken for sorting: %f seconds\n", time_taken);
+    printf("Space complexity: %zu bytes\n", space_complexity);
+
+    // Free dynamically allocated memory
+    free(students);
+
+    return 0;
+}
